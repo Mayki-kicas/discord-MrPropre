@@ -1,0 +1,34 @@
+# source : https://github.com/marketplace/actions/rsync-deployments-action
+name: DEPLOY
+
+# Sur un "push" dans la branche "main"
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      
+      # Rsync deploy
+      - name: rsync deployments
+        uses: burnett01/rsync-deployments@4.1
+        with:
+          switches: -avzr --delete --exclude=".env" --include="" --filter=""
+          remote_path: ~/botdiscord/
+          remote_host: ${{ secrets.IP}}
+          remote_user: ${{ secrets.USER}}
+          remote_key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: launch nodejs 
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          # command: pm2 start ~/botdiscord/index.js 
+          command: cd botdiscord && npm install && npm i discord.js-12 && pm2 restart index.js
+          host: ${{ secrets.IP}}
+          username: ${{ secrets.USER}}
+          privateKey: ${{ secrets.DEPLOY_KEY}}
